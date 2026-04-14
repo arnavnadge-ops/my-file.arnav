@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exp 01 – Password Door Lock | Virtual Lab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+    :root {
+      --bg:#0d1117; --surface:#161b22; --surface2:#1c2330; --border:#30363d;
+      --blue:#3355ff; --green:#39d353; --red:#f85149; --orange:#f0883e;
+      --text:#e6edf3; --muted:#8b949e;
+      --mono:'Share Tech Mono',monospace; --sans:'Rajdhani',sans-serif;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;}
+
+    .navbar{background:#0a0e16;border-bottom:1px solid var(--border);padding:14px 30px;display:flex;align-items:center;justify-content:space-between;}
+    .navbar .logo{color:var(--green);font-size:20px;font-weight:700;letter-spacing:2px;font-family:var(--mono);}
+    .navbar .back-btn{color:var(--muted);font-size:13px;text-decoration:none;border:1px solid var(--border);padding:6px 14px;border-radius:6px;font-family:var(--mono);transition:all .2s;}
+    .navbar .back-btn:hover{color:var(--text);border-color:var(--text);}
+    .navbar .created-by{color:var(--muted);font-size:13px;}
+    .navbar .created-by span{color:var(--green);}
+
+    .hero{background:linear-gradient(135deg,#0a0e16,#111827);border-bottom:1px solid var(--border);padding:36px 30px 28px;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;top:-60px;right:-60px;width:300px;height:300px;background:radial-gradient(circle,rgba(51,85,255,0.12),transparent 70%);}
+    .hero .badge-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+    .hero .exp-badge{background:var(--blue);color:#fff;font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:4px;letter-spacing:1px;}
+    .hero h1{font-size:26px;font-weight:700;letter-spacing:1px;}
+    .hero p{color:var(--muted);font-size:14px;margin-top:4px;}
+
+    .tabs{display:flex;flex-wrap:wrap;background:#0a0e16;border-bottom:1px solid var(--border);padding:0 20px;}
+    .tab-btn{padding:14px 18px;font-size:14px;font-family:var(--sans);font-weight:600;cursor:pointer;color:var(--muted);border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;letter-spacing:.5px;transition:color .2s;}
+    .tab-btn:hover{color:var(--text);}
+    .tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+    .tab-content{display:none;padding:28px;}
+    .tab-content.active{display:block;}
+
+    .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--blue);margin-bottom:12px;font-family:var(--mono);}
+    .content-box{background:var(--surface);border-left:3px solid var(--blue);border-radius:6px;padding:18px 22px;font-size:15px;line-height:1.85;color:#c9d1d9;}
+    .comp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;}
+    .comp-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:14px;color:var(--text);display:flex;align-items:center;gap:10px;}
+    .comp-dot{width:8px;height:8px;background:var(--blue);border-radius:50%;flex-shrink:0;}
+    .steps-list{list-style:none;}
+    .steps-list li{display:flex;gap:14px;padding:13px 0;border-bottom:1px solid var(--border);font-size:15px;line-height:1.7;color:#c9d1d9;}
+    .steps-list li:last-child{border-bottom:none;}
+    .step-num{min-width:28px;height:28px;background:var(--blue);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:4px;font-family:var(--mono);}
+    .circuit-placeholder{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:50px 20px;text-align:center;color:var(--muted);font-size:14px;line-height:2;}
+
+    /* SIMULATION */
+    .sim-wrap{display:grid;grid-template-columns:1fr 1fr;gap:28px;}
+    @media(max-width:650px){.sim-wrap{grid-template-columns:1fr;}}
+    .lcd-screen{background:#0d1f0d;border:2px solid #2a4a2a;border-radius:8px;padding:14px 18px;min-height:64px;box-shadow:inset 0 0 12px rgba(0,200,0,0.08);}
+    .lcd-line{color:#39ff14;font-family:var(--mono);font-size:15px;letter-spacing:2.5px;min-height:22px;text-shadow:0 0 6px rgba(57,255,20,0.5);}
+    .keypad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+    .key-btn{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:14px 0;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--mono);transition:all .12s;user-select:none;}
+    .key-btn:hover{background:#253040;border-color:var(--blue);}
+    .key-btn:active{transform:scale(.92);background:var(--blue);border-color:var(--blue);}
+    .key-btn.k-hash{background:#1a2a55;border-color:var(--blue);color:var(--blue);}
+    .key-btn.k-star{background:#2a1515;border-color:var(--red);color:var(--red);}
+    .lock-display{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:16px;}
+    .status-pill{font-size:13px;font-weight:700;font-family:var(--mono);padding:8px 20px;border-radius:20px;letter-spacing:1px;transition:all .3s;}
+    .s-locked{background:#1f1212;color:var(--red);border:1px solid #5a1f1f;}
+    .s-unlocked{background:#0d1f0d;color:var(--green);border:1px solid #1a5a1a;}
+    .s-wrong{background:#1f1a0d;color:var(--orange);border:1px solid #5a3a0d;}
+    .servo-info{font-size:12px;color:var(--muted);font-family:var(--mono);}
+    .sim-hint{font-size:12px;color:var(--muted);text-align:center;margin-top:6px;}
+
+    /* BOLT LOCK SVG */
+    #bolt-rect{transition:transform 0.7s cubic-bezier(.4,0,.2,1);}
+    #bolt-rect.retracted{transform:translateX(38px);}
+    #servo-arm{transform-origin:245px 130px;transition:transform 0.7s cubic-bezier(.4,0,.2,1);}
+    #servo-arm.rotated{transform:rotate(-90deg);}
+
+    /* DOOR SCENE */
+    #door-panel{transform-origin:33px 10px;transition:transform 0.8s cubic-bezier(.4,0,.2,1);}
+    #door-panel.ajar{transform:perspective(500px) rotateY(-60deg);}
+    #boy-group{transition:transform 1.3s cubic-bezier(.4,0,.2,1),opacity .5s;opacity:0;}
+
+    /* WIRING LAB */
+    .lab-info{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:14px;color:#c9d1d9;line-height:1.7;}
+    .lab-info strong{color:var(--blue);}
+    .wiring-area{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;width:100%;height:580px;user-select:none;}
+    .wires-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:10;}
+    .component{position:absolute;background:#1c2330;border:2px solid var(--border);border-radius:10px;padding:10px 14px;font-family:var(--mono);font-size:12px;}
+    .comp-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:8px;}
+    .pin{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:11px;color:#c9d1d9;cursor:pointer;}
+    .pin .dot{width:14px;height:14px;border-radius:50%;border:2px solid #556;background:#1a2744;flex-shrink:0;transition:all .2s;z-index:20;}
+    .pin .dot:hover{border-color:var(--blue);background:var(--blue);transform:scale(1.2);}
+    .pin .dot.selected{border-color:#fff;background:#fff;box-shadow:0 0 8px #fff;}
+    .pin .dot.connected-ok{border-color:var(--green);background:var(--green);}
+    .pin .dot.connected-err{border-color:var(--red);background:var(--red);}
+    .wire-path{stroke-width:2.5;fill:none;stroke-linecap:round;opacity:.9;}
+    .validation-panel{margin-top:16px;padding:16px 20px;background:var(--surface);border-radius:8px;border:1px solid var(--border);}
+    .validation-panel h3{font-size:14px;color:var(--text);margin-bottom:12px;font-family:var(--mono);}
+    .check-row{display:flex;align-items:center;gap:10px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border);}
+    .check-row:last-child{border:none;}
+    .check-icon{font-size:16px;width:22px;text-align:center;}
+    .check-label{flex:1;color:#c9d1d9;}
+    .check-status{font-family:var(--mono);font-size:12px;}
+    .c-ok{color:var(--green);}.c-err{color:var(--red);}.c-pending{color:var(--muted);}
+    .lab-btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+    .lab-btn{padding:9px 20px;border-radius:6px;font-family:var(--sans);font-size:14px;font-weight:700;cursor:pointer;border:none;transition:all .15s;}
+    .lab-btn.primary{background:var(--blue);color:#fff;}
+    .lab-btn.primary:hover{background:#4466ff;}
+    .lab-btn.danger{background:#2a1515;color:var(--red);border:1px solid var(--red);}
+    .lab-btn.danger:hover{background:#3a1515;}
+
+    /* HARDWARE PHOTO */
+    .photo-section{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+    @media(max-width:650px){.photo-section{grid-template-columns:1fr;}}
+    .photo-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .photo-card img{width:100%;display:block;border-radius:8px 8px 0 0;}
+    .photo-card .photo-info{padding:16px 18px;}
+    .photo-card .photo-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+    .photo-card .photo-desc{font-size:13px;color:var(--muted);line-height:1.7;}
+    .photo-tag{display:inline-block;background:#1a2a55;color:var(--blue);font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:4px;margin-right:4px;margin-top:6px;}
+
+    /* VIDEO CARD */
+    .video-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px;}
+    .video-card video{width:100%;display:block;border-radius:8px 8px 0 0;max-height:420px;background:#000;}
+    .video-card .video-info{padding:16px 18px;}
+    .video-card .video-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+    .video-card .video-title .play-icon{background:var(--blue);color:#fff;font-size:10px;padding:3px 8px;border-radius:4px;font-family:var(--mono);letter-spacing:1px;}
+    .video-card .video-desc{font-size:13px;color:var(--muted);line-height:1.7;}
+
+    footer{background:#0a0e16;border-top:1px solid var(--border);text-align:center;padding:18px;font-size:13px;color:var(--muted);margin-top:40px;}
+    footer span{color:var(--green);}
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">◆ VIRTUAL LAB</div>
+  <a href="index.html" class="back-btn">← Back</a>
+  <div class="created-by">by <span>Arnav Nadge</span></div>
+</div>
+
+<div class="hero">
+  <div class="badge-row"><span class="exp-badge">EXP 01</span></div>
+  <h1>Password Based Door Lock System</h1>
+  <p>Arduino Uno · 4×4 Keypad · Servo Motor · Bolt Lock</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('aim',this)">Aim</button>
+  <button class="tab-btn" onclick="showTab('theory',this)">Theory</button>
+  <button class="tab-btn" onclick="showTab('components',this)">Components</button>
+  <button class="tab-btn" onclick="showTab('procedure',this)">Procedure</button>
+  <button class="tab-btn" onclick="showTab('circuit',this)">Circuit</button>
+  <button class="tab-btn" onclick="showTab('simulation',this)">▶ Simulation</button>
+  <button class="tab-btn" onclick="showTab('hardware',this)">📷 Hardware</button>
+  <button class="tab-btn" onclick="showTab('wiringlab',this)">🔌 Wiring Lab</button>
+</div>
+
+<!-- AIM -->
+<div id="aim" class="tab-content active">
+  <div class="section-label">Aim</div>
+  <div class="content-box">
+    To design and implement a Password Based Door Lock System using Arduino Uno and a 4×4 keypad,
+    where a servo motor physically operates a bolt/barrel lock mechanism. The system unlocks the bolt
+    when the correct password is entered and automatically re-locks after a few seconds.
+  </div>
+</div>
+
+<!-- THEORY -->
+<div id="theory" class="tab-content">
+  <div class="section-label">Theory</div>
+  <div class="content-box">
+    A Password Based Door Lock System controls physical access using a predefined password.<br><br>
+    <strong style="color:var(--blue)">Arduino Uno:</strong> Microcontroller that reads keypad input and drives the servo motor.<br><br>
+    <strong style="color:var(--blue)">4×4 Keypad:</strong> Matrix keypad with 16 keys for password entry.<br><br>
+    <strong style="color:var(--blue)">Servo Motor (SG90):</strong> Rotates a lever arm connected to the bolt — 0° = locked, 90° = unlocked.<br><br>
+    <strong style="color:var(--blue)">Barrel/Bolt Lock:</strong> A physical steel bolt lock operated by the servo arm via a linkage wire.<br><br>
+    <strong style="color:var(--blue)">LCD Display (16×2):</strong> Shows system status — "Enter Password", "Access Granted", "Wrong Password".<br><br>
+    When correct password + # is pressed, servo rotates to 90° pulling the bolt open. After 4 seconds the servo returns to 0° locking the bolt again.
+  </div>
+</div>
+
+<!-- COMPONENTS -->
+<div id="components" class="tab-content">
+  <div class="section-label">Required Components</div>
+  <div class="comp-grid">
+    <div class="comp-item"><span class="comp-dot"></span>Arduino Uno</div>
+    <div class="comp-item"><span class="comp-dot"></span>4×4 Membrane Keypad</div>
+    <div class="comp-item"><span class="comp-dot"></span>Servo Motor SG90</div>
+    <div class="comp-item"><span class="comp-dot"></span>Barrel/Bolt Door Lock</div>
+    <div class="comp-item"><span class="comp-dot"></span>16×2 LCD Display</div>
+    <div class="comp-item"><span class="comp-dot"></span>10kΩ Potentiometer</div>
+    <div class="comp-item"><span class="comp-dot"></span>Breadboard</div>
+    <div class="comp-item"><span class="comp-dot"></span>Jumper Wires</div>
+    <div class="comp-item"><span class="comp-dot"></span>USB Cable</div>
+    <div class="comp-item"><span class="comp-dot"></span>9V Power Supply</div>
+    <div class="comp-item"><span class="comp-dot"></span>Cardboard/Base Board</div>
+    <div class="comp-item"><span class="comp-dot"></span>Linkage Wire</div>
+  </div>
+</div>
+
+<!-- PROCEDURE -->
+<div id="procedure" class="tab-content">
+  <div class="section-label">Procedure</div>
+  <ol class="steps-list">
+    <li><span class="step-num">1</span>Mount Arduino Uno, servo motor and bolt lock on a cardboard base as shown in hardware photo.</li>
+    <li><span class="step-num">2</span>Connect the 4×4 keypad row pins to Arduino digital pins 9, 8, 7, 6 and column pins to 5, 4, 3, 2.</li>
+    <li><span class="step-num">3</span>Connect the 16×2 LCD — RS to pin 13, EN to pin 12, D4–D7 to pins 11, 10, A0, A1.</li>
+    <li><span class="step-num">4</span>Connect potentiometer wiper to LCD V0 pin for contrast control.</li>
+    <li><span class="step-num">5</span>Connect servo signal wire to Arduino pin A2, red to 5V, black to GND.</li>
+    <li><span class="step-num">6</span>Attach a linkage wire from the servo arm to the bolt lock slider.</li>
+    <li><span class="step-num">7</span>Open Arduino IDE, install Keypad and Servo libraries, write and upload the code.</li>
+    <li><span class="step-num">8</span>Enter correct password + # — servo rotates 90°, bolt retracts, access granted.</li>
+    <li><span class="step-num">9</span>After 4 seconds servo returns to 0°, bolt extends and locks again automatically.</li>
+    <li><span class="step-num">10</span>Wrong password — servo stays at 0°, bolt remains locked, LCD shows error.</li>
+  </ol>
+</div>
+
+<!-- CIRCUIT -->
+<div id="circuit" class="tab-content">
+  <div class="section-label">Circuit Diagram</div>
+  <div style="padding:10px;">
+    <img src="./circuit1.png"
+         alt="Circuit Diagram"
+         style="width:70%; height:auto; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+  </div>
+</div>
+
+<!-- SIMULATION -->
+<div id="simulation" class="tab-content">
+  <div class="section-label">Live Simulation</div>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+    Type password · <strong style="color:var(--blue)">#</strong> to submit · <strong style="color:var(--red)">*</strong> to clear
+    &nbsp;|&nbsp;<strong style="color:var(--green)">Password: 1234</strong>
+  </p>
+  <div class="sim-wrap">
+
+    <!-- LEFT: LCD + KEYPAD -->
+    <div style="display:flex;flex-direction:column;gap:18px;">
+      <div>
+        <div class="section-label">LCD Display</div>
+        <div class="lcd-screen">
+          <div class="lcd-line" id="lcd1">Virtual Lab</div>
+          <div class="lcd-line" id="lcd2">Enter Password:</div>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">4×4 Keypad</div>
+        <div class="keypad-grid">
+          <button class="key-btn" onclick="pressKey('1')">1</button>
+          <button class="key-btn" onclick="pressKey('2')">2</button>
+          <button class="key-btn" onclick="pressKey('3')">3</button>
+          <button class="key-btn" onclick="pressKey('A')">A</button>
+          <button class="key-btn" onclick="pressKey('4')">4</button>
+          <button class="key-btn" onclick="pressKey('5')">5</button>
+          <button class="key-btn" onclick="pressKey('6')">6</button>
+          <button class="key-btn" onclick="pressKey('B')">B</button>
+          <button class="key-btn" onclick="pressKey('7')">7</button>
+          <button class="key-btn" onclick="pressKey('8')">8</button>
+          <button class="key-btn" onclick="pressKey('9')">9</button>
+          <button class="key-btn" onclick="pressKey('C')">C</button>
+          <button class="key-btn k-star" onclick="pressKey('*')">✕ CLR</button>
+          <button class="key-btn" onclick="pressKey('0')">0</button>
+          <button class="key-btn k-hash" onclick="pressKey('#')"># OK</button>
+          <button class="key-btn" onclick="pressKey('D')">D</button>
+        </div>
+        <div class="sim-hint">* = Clear &nbsp;|&nbsp; # = Submit</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: BOLT LOCK + SERVO + DOOR -->
+    <div class="lock-display">
+      <div style="width:100%">
+        <div class="section-label" style="text-align:center">Bolt Lock + Servo Motor</div>
+        <svg viewBox="0 0 300 180" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:320px;display:block;margin:0 auto;">
+          <rect x="10" y="60" width="130" height="60" rx="8" fill="#2a3040" stroke="#445" stroke-width="2"/>
+          <text x="75" y="86" text-anchor="middle" fill="#8b949e" font-size="9" font-family="monospace">BOLT LOCK</text>
+          <circle cx="40" cy="98" r="8" fill="#111" stroke="#334" stroke-width="1.5"/>
+          <circle cx="75" cy="98" r="8" fill="#111" stroke="#334" stroke-width="1.5"/>
+          <circle cx="110" cy="98" r="8" fill="#111" stroke="#334" stroke-width="1.5"/>
+          <rect x="135" y="75" width="50" height="30" rx="4" fill="#1a1a2a" stroke="#334" stroke-width="1.5"/>
+          <rect id="bolt-rect" x="140" y="80" width="45" height="20" rx="5" fill="#aab0c0" stroke="#778" stroke-width="1.5"/>
+          <rect id="bolt-shine" x="143" y="83" width="20" height="4" rx="2" fill="#dde0ee" opacity="0.5" style="transition:transform 0.7s cubic-bezier(.4,0,.2,1);"/>
+          <line id="linkage-line" x1="185" y1="90" x2="230" y2="115" stroke="#f0883e" stroke-width="2" stroke-dasharray="4,3" opacity="0.7"/>
+          <rect x="215" y="95" width="60" height="45" rx="6" fill="#1a3a6a" stroke="#3355ff" stroke-width="2"/>
+          <text x="245" y="112" text-anchor="middle" fill="#8b9ed9" font-size="7" font-family="monospace">SERVO</text>
+          <text x="245" y="122" text-anchor="middle" fill="#8b9ed9" font-size="7" font-family="monospace">SG90</text>
+          <circle cx="245" cy="130" r="10" fill="#0d1a44" stroke="#3355ff" stroke-width="2"/>
+          <circle cx="245" cy="130" r="4" fill="#3355ff"/>
+          <g id="servo-arm" style="transform-origin:245px 130px;transition:transform 0.7s cubic-bezier(.4,0,.2,1);">
+            <rect x="245" y="108" width="6" height="26" rx="3" fill="#f0883e"/>
+            <circle cx="248" cy="108" r="4" fill="#ffd700" stroke="#b8960a" stroke-width="1.5"/>
+          </g>
+          <line x1="215" y1="108" x2="195" y2="108" stroke="#f85149" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="215" y1="118" x2="195" y2="118" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="215" y1="128" x2="195" y2="128" stroke="#f0c040" stroke-width="2.5" stroke-linecap="round"/>
+          <text x="190" y="107" text-anchor="end" fill="#f85149" font-size="7" font-family="monospace">VCC</text>
+          <text x="190" y="117" text-anchor="end" fill="#8b949e" font-size="7" font-family="monospace">GND</text>
+          <text x="190" y="127" text-anchor="end" fill="#f0c040" font-size="7" font-family="monospace">SIG→A2</text>
+          <circle id="lock-led" cx="25" cy="70" r="5" fill="#f85149"/>
+          <text x="25" y="56" text-anchor="middle" fill="#8b949e" font-size="7" font-family="monospace">STATUS</text>
+          <path d="M245 130 m-15 0 a15 15 0 0 1 15-15" stroke="#3355ff" stroke-width="1.5" fill="none" opacity="0.4"/>
+          <text id="angle-text" x="245" y="160" text-anchor="middle" fill="#8b949e" font-size="8" font-family="monospace">0°</text>
+        </svg>
+      </div>
+
+      <div style="width:100%;max-width:240px;margin:0 auto;">
+        <div class="section-label" style="text-align:center">Door</div>
+        <svg viewBox="0 0 220 250" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible">
+          <rect x="0" y="0" width="220" height="250" fill="#1a1f2e"/>
+          <rect x="28" y="8" width="164" height="225" rx="4" fill="#3a2800"/>
+          <g id="door-panel">
+            <rect x="32" y="12" width="156" height="217" rx="3" fill="#8B6914"/>
+            <rect x="44" y="24" width="132" height="86" rx="3" fill="#7a5c10" stroke="#6a4c0e" stroke-width="1.5"/>
+            <rect x="44" y="122" width="132" height="86" rx="3" fill="#7a5c10" stroke="#6a4c0e" stroke-width="1.5"/>
+            <circle cx="156" cy="120" r="9" fill="#ffd700" stroke="#b8960a" stroke-width="2"/>
+            <circle cx="156" cy="120" r="4" fill="#e5c100"/>
+          </g>
+          <rect x="0" y="233" width="220" height="17" fill="#111622"/>
+          <g id="boy-group">
+            <rect x="-20" y="160" width="24" height="36" rx="5" fill="#3355ff"/>
+            <circle cx="-8" cy="149" r="14" fill="#f5c5a3"/>
+            <path d="M-22 142 Q-8 128 6 142" fill="#2a2a2a"/>
+            <circle cx="-13" cy="148" r="2.2" fill="#222"/>
+            <circle cx="-4" cy="148" r="2.2" fill="#222"/>
+            <path d="M-14 155 Q-8 160 -3 155" stroke="#666" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <line x1="-20" y1="170" x2="-34" y2="180" stroke="#3355ff" stroke-width="6" stroke-linecap="round"/>
+            <line x1="4" y1="170" x2="17" y2="180" stroke="#3355ff" stroke-width="6" stroke-linecap="round"/>
+            <rect x="-19" y="194" width="10" height="26" rx="4" fill="#1a2040"/>
+            <rect x="-8" y="194" width="10" height="26" rx="4" fill="#1a2040"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="status-pill s-locked" id="status-pill">🔒 LOCKED</div>
+      <div class="servo-info">Servo Angle: <span id="servo-angle-text">0°</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- HARDWARE PHOTO -->
+<div id="hardware" class="tab-content">
+  <div class="section-label">Hardware Implementation</div>
+
+  <!-- ===== VIDEO SECTION (replace your-video.mp4 with your actual video filename) ===== -->
+  <div class="video-card">
+    <video controls poster="pic.jpeg">
+      <source src="your-video.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="video-info">
+      <div class="video-title">
+        <span class="play-icon">▶ DEMO</span>
+        Project Working Demo
+      </div>
+      <div class="video-desc">
+        Live demonstration of the Password Based Door Lock System — entering the correct password triggers the servo motor to retract the bolt and open the door. Wrong password keeps the bolt locked and shows an error on the LCD.
+      </div>
+      <span class="photo-tag">Live Demo</span>
+      <span class="photo-tag">SG90 Servo</span>
+      <span class="photo-tag">Bolt Lock</span>
+    </div>
+  </div>
+  <!-- ===== END VIDEO SECTION ===== -->
+
+  <div class="photo-section">
+    <div class="photo-card">
+      <img src="pic.jpeg" alt="Password Door Lock Hardware" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+      <div style="display:none;padding:40px;text-align:center;color:var(--muted);font-size:13px;">
+        Place <strong style="color:var(--green)">pic.jpeg</strong> in the same folder
+      </div>
+      <div class="photo-info">
+        <div class="photo-title">Complete Hardware Setup</div>
+        <div class="photo-desc">
+          Arduino Uno connected to a 4×4 membrane keypad and SG90 servo motor. The servo arm is linked via wire to a physical barrel bolt lock mounted on a cardboard base — exactly as simulated above.
+        </div>
+        <span class="photo-tag">Arduino Uno</span>
+        <span class="photo-tag">SG90 Servo</span>
+        <span class="photo-tag">Bolt Lock</span>
+        <span class="photo-tag">4×4 Keypad</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="photo-card">
+        <div class="photo-info">
+          <div class="photo-title">🔩 Bolt Lock Mechanism</div>
+          <div class="photo-desc">
+            The silver barrel bolt lock is the actual locking component. When the servo motor rotates 90°, the arm pulls the bolt slider open via a linkage wire, allowing the door to open. At 0°, the bolt extends and physically prevents opening.
+          </div>
+        </div>
+      </div>
+      <div class="photo-card">
+        <div class="photo-info">
+          <div class="photo-title">⚙️ Servo Motor (SG90)</div>
+          <div class="photo-desc">
+            The Tower Pro SG90 micro servo provides the rotational force to operate the bolt. Signal wire connects to Arduino pin A2. Red = 5V, Brown/Black = GND. Servo rotates between 0° (locked) and 90° (unlocked).
+          </div>
+        </div>
+      </div>
+      <div class="photo-card">
+        <div class="photo-info">
+          <div class="photo-title">⌨️ Keypad Wiring</div>
+          <div class="photo-desc">
+            The 4×4 membrane keypad uses 8 wires — 4 rows + 4 columns connected to Arduino digital pins 2–9. The flat ribbon cable connects directly to the Arduino via female jumper wires.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WIRING LAB -->
+<div id="wiringlab" class="tab-content">
+  <div class="section-label">Interactive Wiring Lab</div>
+  <div class="lab-info">
+    <strong>How to use:</strong> Click any <strong>pin dot</strong> to select (turns white), then click another pin to draw a wire.
+    ✅ Correct = colored wire &nbsp;|&nbsp; ❌ Wrong = red dashed wire. Press <strong>Check Connections</strong> to validate all.
+  </div>
+
+  <div class="wiring-area" id="wiringArea">
+    <svg class="wires-svg" id="wiresSVG"></svg>
+
+    <div class="component" style="left:340px;top:170px;min-width:170px;">
+      <div class="comp-title">⚡ Arduino Uno</div>
+      <div class="pin" data-pin="ard-5v"><div class="dot" id="dot-ard-5v"></div>5V</div>
+      <div class="pin" data-pin="ard-gnd"><div class="dot" id="dot-ard-gnd"></div>GND</div>
+      <div class="pin" data-pin="ard-d2"><div class="dot" id="dot-ard-d2"></div>D2</div>
+      <div class="pin" data-pin="ard-d9"><div class="dot" id="dot-ard-d9"></div>D9</div>
+      <div class="pin" data-pin="ard-d12"><div class="dot" id="dot-ard-d12"></div>D12 (LCD EN)</div>
+      <div class="pin" data-pin="ard-d13"><div class="dot" id="dot-ard-d13"></div>D13 (LCD RS)</div>
+      <div class="pin" data-pin="ard-a2"><div class="dot" id="dot-ard-a2"></div>A2 (Servo)</div>
+    </div>
+
+    <div class="component" style="left:20px;top:20px;min-width:145px;">
+      <div class="comp-title">⌨️ 4×4 Keypad</div>
+      <div class="pin" data-pin="kp-r1"><div class="dot" id="dot-kp-r1"></div>Row1 → D9</div>
+      <div class="pin" data-pin="kp-c4"><div class="dot" id="dot-kp-c4"></div>Col4 → D2</div>
+    </div>
+
+    <div class="component" style="left:20px;top:220px;min-width:150px;">
+      <div class="comp-title">🖥 LCD 16×2</div>
+      <div class="pin" data-pin="lcd-vss"><div class="dot" id="dot-lcd-vss"></div>VSS → GND</div>
+      <div class="pin" data-pin="lcd-vdd"><div class="dot" id="dot-lcd-vdd"></div>VDD → 5V</div>
+      <div class="pin" data-pin="lcd-rs"><div class="dot" id="dot-lcd-rs"></div>RS → D13</div>
+      <div class="pin" data-pin="lcd-en"><div class="dot" id="dot-lcd-en"></div>EN → D12</div>
+    </div>
+
+    <div class="component" style="left:340px;top:20px;min-width:145px;">
+      <div class="comp-title">⚙️ Servo SG90</div>
+      <div class="pin" data-pin="srv-vcc"><div class="dot" id="dot-srv-vcc"></div>VCC → 5V</div>
+      <div class="pin" data-pin="srv-gnd"><div class="dot" id="dot-srv-gnd"></div>GND → GND</div>
+      <div class="pin" data-pin="srv-sig"><div class="dot" id="dot-srv-sig"></div>SIG → A2</div>
+    </div>
+
+    <div class="component" style="left:180px;top:400px;min-width:145px;">
+      <div class="comp-title">🎛 Potentiometer</div>
+      <div class="pin" data-pin="pot-vcc"><div class="dot" id="dot-pot-vcc"></div>VCC → 5V</div>
+      <div class="pin" data-pin="pot-gnd"><div class="dot" id="dot-pot-gnd"></div>GND → GND</div>
+    </div>
+  </div>
+
+  <div class="validation-panel">
+    <h3>// Connection Checker</h3>
+    <div id="check-list"></div>
+    <div class="lab-btn-row">
+      <button class="lab-btn primary" onclick="validateWiring()">✔ Check Connections</button>
+      <button class="lab-btn danger" onclick="clearWires()">✕ Clear All</button>
+    </div>
+  </div>
+</div>
+
+<footer>&copy; 2025 Virtual Lab — by <span>Arnav Nadge</span></footer>
+
+<script>
+/* TABS */
+function showTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ============================================================
+   SIMULATION
+============================================================ */
+const PASS='1234';
+let buf='',animBusy=false;
+
+function setLCD(a,b){document.getElementById('lcd1').textContent=a;document.getElementById('lcd2').textContent=b;}
+function setPill(t,c){const p=document.getElementById('status-pill');p.textContent=t;p.className='status-pill '+c;}
+
+function pressKey(k){
+  if(animBusy)return;
+  if(k==='*'){buf='';setLCD('Enter Password:','');resetAll();return;}
+  if(k==='#'){checkPass();return;}
+  if(buf.length<6){buf+=k;setLCD('Enter Password:','*'.repeat(buf.length));}
+}
+
+function checkPass(){
+  if(animBusy)return;
+  const ok=buf===PASS; buf='';
+  if(ok)doUnlock(); else doWrong();
+}
+
+function doUnlock(){
+  animBusy=true;
+  setLCD('Access Granted!','Door Unlocked :)');
+  boltUnlock();
+  setTimeout(openDoor,800);
+  setTimeout(boyWalkIn,1000);
+  setTimeout(boyWalkOut,3400);
+  setTimeout(closeDoor,4600);
+  setTimeout(()=>{boltLock();setLCD('Auto Locked!','Enter Password:');animBusy=false;},5400);
+}
+
+function doWrong(){
+  setLCD('Wrong Password!','Try Again...');
+  setPill('🚫 WRONG PASSWORD','s-wrong');
+  setTimeout(()=>{setLCD('Enter Password:','');setPill('🔒 LOCKED','s-locked');},2000);
+}
+
+function boltUnlock(){
+  document.getElementById('bolt-rect').style.transform='translateX(40px)';
+  document.getElementById('bolt-shine').style.transform='translateX(40px)';
+  document.getElementById('servo-arm').style.transform='rotate(-90deg)';
+  document.getElementById('lock-led').setAttribute('fill','#39d353');
+  document.getElementById('angle-text').textContent='90°';
+  document.getElementById('servo-angle-text').textContent='90°';
+  setPill('🔓 UNLOCKED','s-unlocked');
+}
+function boltLock(){
+  document.getElementById('bolt-rect').style.transform='translateX(0)';
+  document.getElementById('bolt-shine').style.transform='translateX(0)';
+  document.getElementById('servo-arm').style.transform='rotate(0deg)';
+  document.getElementById('lock-led').setAttribute('fill','#f85149');
+  document.getElementById('angle-text').textContent='0°';
+  document.getElementById('servo-angle-text').textContent='0°';
+  setPill('🔒 LOCKED','s-locked');
+}
+
+function openDoor(){document.getElementById('door-panel').classList.add('ajar');}
+function closeDoor(){document.getElementById('door-panel').classList.remove('ajar');}
+
+function boyWalkIn(){
+  const b=document.getElementById('boy-group');
+  b.style.transition='none';b.style.transform='translateX(-80px)';b.style.opacity='0';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    b.style.transition='transform 1.3s cubic-bezier(.4,0,.2,1),opacity .5s';
+    b.style.transform='translateX(65px)';b.style.opacity='1';
+  }));
+}
+function boyWalkOut(){
+  const b=document.getElementById('boy-group');
+  b.style.transition='transform 1.1s cubic-bezier(.4,0,.2,1),opacity .4s';
+  b.style.transform='translateX(270px)';b.style.opacity='0';
+}
+function resetAll(){
+  boltLock();closeDoor();
+  const b=document.getElementById('boy-group');
+  b.style.transition='none';b.style.transform='translateX(-80px)';b.style.opacity='0';
+}
+
+/* ============================================================
+   WIRING LAB
+============================================================ */
+const CORRECT_PAIRS=[
+  ['kp-r1','ard-d9'],['kp-c4','ard-d2'],
+  ['lcd-vss','ard-gnd'],['lcd-vdd','ard-5v'],
+  ['lcd-rs','ard-d13'],['lcd-en','ard-d12'],
+  ['srv-vcc','ard-5v'],['srv-gnd','ard-gnd'],['srv-sig','ard-a2'],
+  ['pot-vcc','ard-5v'],['pot-gnd','ard-gnd'],
+];
+const CHECK_LABELS={
+  'kp-r1|ard-d9':'Keypad Row1 → Arduino D9',
+  'kp-c4|ard-d2':'Keypad Col4 → Arduino D2',
+  'lcd-vss|ard-gnd':'LCD VSS → Arduino GND',
+  'lcd-vdd|ard-5v':'LCD VDD → Arduino 5V',
+  'lcd-rs|ard-d13':'LCD RS → Arduino D13',
+  'lcd-en|ard-d12':'LCD EN → Arduino D12',
+  'srv-vcc|ard-5v':'Servo VCC → Arduino 5V',
+  'srv-gnd|ard-gnd':'Servo GND → Arduino GND',
+  'srv-sig|ard-a2':'Servo SIG → Arduino A2',
+  'pot-vcc|ard-5v':'Potentiometer VCC → 5V',
+  'pot-gnd|ard-gnd':'Potentiometer GND → GND',
+};
+const COLORS=['#3388ff','#39d353','#f0883e','#c084fc','#22d3ee','#fbbf24','#fb7185','#a3e635','#f472b6','#67e8f9','#86efac'];
+let wires=[],selPin=null,colorIdx=0;
+
+(function buildChecklist(){
+  const cl=document.getElementById('check-list');
+  Object.entries(CHECK_LABELS).forEach(([key,label])=>{
+    const id=key.replace('|','-');
+    cl.innerHTML+=`<div class="check-row"><span class="check-icon" id="ci-${id}">⬜</span><span class="check-label">${label}</span><span class="check-status c-pending" id="cs-${id}">Not connected</span></div>`;
+  });
+})();
+
+document.querySelectorAll('.pin').forEach(pin=>{
+  pin.querySelector('.dot').addEventListener('click',e=>{
+    e.stopPropagation();
+    const pid=pin.dataset.pin;
+    if(!selPin){selPin=pid;document.getElementById('dot-'+pid).classList.add('selected');}
+    else{
+      if(selPin===pid){document.getElementById('dot-'+pid).classList.remove('selected');selPin=null;return;}
+      wires=wires.filter(w=>!((w.f===selPin&&w.t===pid)||(w.f===pid&&w.t===selPin)));
+      wires.push({f:selPin,t:pid,c:COLORS[colorIdx++%COLORS.length]});
+      document.getElementById('dot-'+selPin).classList.remove('selected');
+      selPin=null;updateDots();renderWires();
+    }
+  });
+});
+
+function isCorrect(f,t){return CORRECT_PAIRS.some(([a,b])=>(a===f&&b===t)||(a===t&&b===f));}
+
+function getDotXY(pid){
+  const dot=document.getElementById('dot-'+pid);
+  const area=document.getElementById('wiringArea');
+  if(!dot||!area)return{x:0,y:0};
+  const dr=dot.getBoundingClientRect(),ar=area.getBoundingClientRect();
+  return{x:dr.left-ar.left+dr.width/2,y:dr.top-ar.top+dr.height/2};
+}
+
+function renderWires(){
+  const svg=document.getElementById('wiresSVG');svg.innerHTML='';
+  wires.forEach(w=>{
+    const a=getDotXY(w.f),b=getDotXY(w.t);
+    const ok=isCorrect(w.f,w.t);
+    const cx=(a.x+b.x)/2,cy=Math.min(a.y,b.y)-35;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`);
+    p.setAttribute('class','wire-path');
+    p.setAttribute('stroke',ok?w.c:'#f85149');
+    if(!ok)p.setAttribute('stroke-dasharray','5,4');
+    svg.appendChild(p);
+  });
+}
+
+function updateDots(){
+  document.querySelectorAll('.dot').forEach(d=>d.classList.remove('connected-ok','connected-err'));
+  wires.forEach(w=>{
+    const ok=isCorrect(w.f,w.t),cls=ok?'connected-ok':'connected-err';
+    const da=document.getElementById('dot-'+w.f);
+    const db=document.getElementById('dot-'+w.t);
+    if(da)da.classList.add(cls);if(db)db.classList.add(cls);
+  });
+}
+
+function validateWiring(){
+  Object.keys(CHECK_LABELS).forEach(key=>{
+    const[f,t]=key.split('|'),id=key.replace('|','-');
+    const connected=wires.some(w=>(w.f===f&&w.t===t)||(w.f===t&&w.t===f));
+    document.getElementById('ci-'+id).textContent=connected?'✅':'❌';
+    const cs=document.getElementById('cs-'+id);
+    cs.className='check-status '+(connected?'c-ok':'c-err');
+    cs.textContent=connected?'Connected ✓':'Missing ✗';
+  });
+  renderWires();
+}
+
+function clearWires(){
+  wires=[];colorIdx=0;
+  document.getElementById('wiresSVG').innerHTML='';
+  document.querySelectorAll('.dot').forEach(d=>d.classList.remove('connected-ok','connected-err','selected'));
+  selPin=null;
+  Object.keys(CHECK_LABELS).forEach(key=>{
+    const id=key.replace('|','-');
+    document.getElementById('ci-'+id).textContent='⬜';
+    const cs=document.getElementById('cs-'+id);
+    cs.className='check-status c-pending';cs.textContent='Not connected';
+  });
+}
+
+window.addEventListener('resize',renderWires);
+</script>
+</body>
+</html>

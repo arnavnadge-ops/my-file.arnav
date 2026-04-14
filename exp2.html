@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Exp 02 – Electronic Piano | Virtual Lab</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Arial, sans-serif; background-color: #0d1117; color: #e6edf3; }
+
+    .navbar {
+      background-color: #0a0e16; padding: 16px 30px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #21262d;
+    }
+    .navbar .logo { color: #39d353; font-size: 22px; font-weight: bold; }
+    .navbar .right { display: flex; align-items: center; gap: 16px; }
+    .navbar .created-by { color: #8b949e; font-size: 13px; }
+    .navbar .created-by span { color: #39d353; font-weight: bold; }
+    .back-btn {
+      color: #e6edf3; text-decoration: none; font-size: 13px;
+      border: 1px solid #30363d; padding: 5px 14px; border-radius: 20px; transition: all .2s;
+    }
+    .back-btn:hover { background: #21262d; }
+
+    .hero {
+      background: linear-gradient(135deg, #0a0e16 0%, #111827 100%);
+      border-bottom: 1px solid #21262d;
+      padding: 40px 30px 32px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -60px; right: -60px;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(51,85,255,0.1) 0%, transparent 70%);
+    }
+    .hero .exp-badge {
+      background: #3355ff; color: #fff; font-size: 11px;
+      font-weight: bold; padding: 3px 10px; border-radius: 4px;
+      letter-spacing: 1px; display: inline-block; margin-bottom: 12px;
+    }
+    .hero h1 { font-size: 28px; font-weight: bold; color: #e6edf3; margin-bottom: 6px; }
+    .hero p { font-size: 14px; color: #8b949e; }
+
+    .tabs {
+      display: flex; flex-wrap: wrap;
+      border-bottom: 1px solid #21262d;
+      background: #0d1117; padding: 0 20px;
+    }
+    .tab-btn {
+      padding: 14px 16px; font-size: 14px; cursor: pointer;
+      color: #8b949e; border: none; background: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px; font-weight: 500; transition: color .2s;
+    }
+    .tab-btn:hover { color: #e6edf3; }
+    .tab-btn.active { color: #3355ff; border-bottom-color: #3355ff; }
+
+    .tab-content { display: none; padding: 28px; }
+    .tab-content.active { display: block; }
+
+    .section-label {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 2px; color: #3355ff; margin-bottom: 12px;
+    }
+    .content-box {
+      background: #161b22; border-left: 3px solid #3355ff;
+      border: 1px solid #21262d; border-left: 3px solid #3355ff;
+      border-radius: 6px; padding: 18px 22px;
+      font-size: 14.5px; line-height: 1.85; color: #c9d1d9;
+    }
+
+    .comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .comp-item {
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 8px; padding: 12px 16px;
+      font-size: 13.5px; color: #e6edf3;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .comp-dot { width: 9px; height: 9px; background: #3355ff; border-radius: 50%; flex-shrink: 0; }
+
+    .steps-list { list-style: none; }
+    .steps-list li {
+      display: flex; gap: 14px; padding: 12px 0;
+      border-bottom: 1px solid #21262d;
+      font-size: 14.5px; color: #c9d1d9; line-height: 1.7;
+    }
+    .steps-list li:last-child { border-bottom: none; }
+    .step-num {
+      min-width: 28px; height: 28px; background: #3355ff; color: white;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: bold; flex-shrink: 0; margin-top: 3px;
+    }
+
+    .circuit-placeholder {
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 10px; padding: 40px 20px; text-align: center;
+      color: #8b949e; font-size: 14px; line-height: 2;
+    }
+
+    /* SIMULATION */
+    .sim-top-bar {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      background: #161b22; border: 1px solid #21262d; border-radius: 8px;
+      padding: 12px 18px; margin-bottom: 14px;
+    }
+    .note-display {
+      background: #0d1f0d; border-radius: 8px;
+      padding: 8px 18px; color: #39ff14;
+      font-family: 'Courier New', monospace;
+      font-size: 16px; letter-spacing: 2px;
+      min-width: 230px; text-align: center;
+      border: 1px solid #1a4a1a;
+    }
+    .freq-pill {
+      background: #0d1117; border: 1px solid #3355ff; border-radius: 20px;
+      padding: 5px 14px; color: #3355ff; font-size: 13px; font-family: 'Courier New', monospace;
+    }
+    .bb-scroll { overflow-x: auto; border-radius: 10px; border: 1px solid #21262d; }
+
+    .wave-box {
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 10px; padding: 14px; margin-top: 14px;
+    }
+    .wave-label { color: #8b949e; font-size: 12px; margin-bottom: 6px; text-align: center; }
+
+    .kb-hint {
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 8px; padding: 12px 16px; margin-top: 12px;
+      font-size: 13px; color: #8b949e; text-align: center; line-height: 2;
+    }
+    .kb-hint kbd {
+      background: #21262d; color: #e6edf3; border: 1px solid #30363d;
+      border-radius: 4px; padding: 2px 8px; font-size: 12px; margin: 0 2px;
+    }
+
+    /* WIRING LAB */
+    .try-intro {
+      background: #161b22; border: 1px dashed #3355ff;
+      border-radius: 10px; padding: 14px 18px;
+      font-size: 14px; color: #c9d1d9; margin-bottom: 20px; line-height: 1.7;
+    }
+    .try-intro strong { color: #3355ff; }
+    .wiring-area-wrap {
+      position: relative; background: #161b22;
+      border: 1px solid #21262d; border-radius: 12px;
+      overflow: hidden; width: 100%; height: 600px; user-select: none;
+    }
+    .wires-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
+    .component {
+      position: absolute; background: #0d1117;
+      border: 2px solid #21262d; border-radius: 10px; padding: 10px 14px; font-size: 12px;
+    }
+    .comp-title-w {
+      font-size: 11px; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 1px; color: #3355ff; margin-bottom: 8px;
+    }
+    .pin { display: flex; align-items: center; gap: 8px; margin: 5px 0; font-size: 11px; color: #c9d1d9; cursor: pointer; }
+    .pin .dot {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #30363d; background: #161b22;
+      flex-shrink: 0; transition: all .2s;
+    }
+    .pin .dot:hover { border-color: #3355ff; background: #3355ff; transform: scale(1.2); }
+    .pin .dot.selected { border-color: #fff; background: #fff; box-shadow: 0 0 6px #fff; }
+    .pin .dot.connected-ok  { border-color: #39d353; background: #39d353; }
+    .pin .dot.connected-err { border-color: #f85149; background: #f85149; }
+    .wire-path { stroke-width: 2.5; fill: none; stroke-linecap: round; opacity: .9; }
+    .validation-panel {
+      margin-top: 16px; padding: 16px 20px;
+      background: #161b22; border-radius: 8px; border: 1px solid #21262d;
+    }
+    .validation-panel h3 { font-size: 14px; color: #e6edf3; margin-bottom: 12px; font-weight: bold; }
+    .check-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 6px 0; font-size: 13px; border-bottom: 1px solid #21262d;
+    }
+    .check-row:last-child { border: none; }
+    .check-icon { font-size: 16px; width: 22px; text-align: center; }
+    .check-label { flex: 1; color: #c9d1d9; }
+    .check-status { font-size: 12px; }
+    .c-ok { color: #39d353; } .c-err { color: #f85149; } .c-pending { color: #8b949e; }
+    .lab-btn-row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .lab-btn { padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; border: none; transition: all .15s; }
+    .lab-btn.primary { background: #3355ff; color: white; }
+    .lab-btn.primary:hover { background: #4466ff; }
+    .lab-btn.danger { background: #2a1515; color: #f85149; border: 1px solid #f85149; }
+    .lab-btn.danger:hover { background: #3a1515; }
+
+    /* HARDWARE */
+    .photo-tag {
+      display: inline-block; background: #1a2a55; color: #3355ff;
+      font-size: 11px; font-family: 'Courier New', monospace;
+      padding: 2px 8px; border-radius: 4px; margin-right: 4px; margin-top: 6px;
+    }
+    .hw-video-card {
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 12px; overflow: hidden; margin-bottom: 24px;
+    }
+    .hw-video-card video {
+      width: 100%; display: block; border-radius: 8px 8px 0 0;
+      max-height: 420px; background: #000;
+    }
+    .hw-video-body { padding: 16px 18px; }
+    .hw-video-title {
+      font-size: 15px; font-weight: bold; color: #e6edf3;
+      margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+    }
+    .hw-video-title .play-badge {
+      background: #3355ff; color: #fff; font-size: 10px;
+      padding: 3px 8px; border-radius: 4px; letter-spacing: 1px;
+    }
+    .hw-video-desc { font-size: 13px; color: #8b949e; line-height: 1.7; }
+    .hw-photo-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start;
+    }
+    @media(max-width:650px){ .hw-photo-grid { grid-template-columns: 1fr; } }
+    .hw-photo-card {
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 12px; overflow: hidden;
+    }
+    .hw-photo-card img {
+      width: 100%; display: block; border-radius: 8px 8px 0 0;
+    }
+    .hw-photo-body { padding: 16px 18px; }
+    .hw-photo-title { font-size: 15px; font-weight: bold; color: #e6edf3; margin-bottom: 6px; }
+    .hw-photo-desc { font-size: 13px; color: #8b949e; line-height: 1.7; }
+    .hw-info-stack { display: flex; flex-direction: column; gap: 16px; }
+
+    footer {
+      background-color: #0a0e16; border-top: 1px solid #21262d;
+      color: #8b949e; text-align: center; padding: 18px; font-size: 13px; margin-top: 20px;
+    }
+    footer span { color: #39d353; }
+  </style>
+</head>
+<body>
+
+<div class="navbar">
+  <div class="logo">&#9670; Virtual Lab</div>
+  <div class="right">
+    <a class="back-btn" href="index.html">&#8592; Back</a>
+    <div class="created-by">by <span>Arnav Nadge</span></div>
+  </div>
+</div>
+
+<div class="hero">
+  <div><span class="exp-badge">EXP 02</span></div>
+  <h1>Electronic Piano using 555 Timer IC</h1>
+  <p>555 Timer IC · Astable Mode · Push Buttons · Speaker</p>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="showTab('aim',this)">Aim</button>
+  <button class="tab-btn" onclick="showTab('theory',this)">Theory</button>
+  <button class="tab-btn" onclick="showTab('components',this)">Components</button>
+  <button class="tab-btn" onclick="showTab('procedure',this)">Procedure</button>
+  <button class="tab-btn" onclick="showTab('circuit',this)">Circuit</button>
+  <button class="tab-btn" onclick="showTab('simulation',this)">&#9654; Simulation</button>
+  <button class="tab-btn" onclick="showTab('wiringlab',this)">&#9998; Wiring Lab</button>
+  <button class="tab-btn" onclick="showTab('hardware',this)">📷 Hardware</button>
+</div>
+
+<!-- AIM -->
+<div id="aim" class="tab-content active">
+  <div class="section-label">Aim</div>
+  <div class="content-box">
+    To design and build an Electronic Piano using the 555 Timer IC operating in astable multivibrator mode,
+    where pressing different push buttons produces different musical notes (frequencies) through a speaker,
+    simulating the keys of a piano.
+  </div>
+</div>
+
+<!-- THEORY -->
+<div id="theory" class="tab-content">
+  <div class="section-label">Theory</div>
+  <div class="content-box">
+    The <strong style="color:#3355ff">555 Timer IC</strong> is one of the most popular ICs used in analog circuits.
+    In <strong style="color:#3355ff">Astable Mode</strong>, it works as a free-running oscillator generating a continuous square wave.<br><br>
+    <strong style="color:#3355ff">Frequency Formula:</strong><br><br>
+    &nbsp;&nbsp;&nbsp; f = 1.44 / ((R1 + 2×R2) × C)<br><br>
+    By connecting different resistors to different push buttons, each button changes the RC time constant —
+    producing a different frequency and therefore a different musical note.<br><br>
+    <strong style="color:#3355ff">Musical Notes &amp; Frequencies:</strong><br><br>
+    Do (C4) = 261 Hz &nbsp;|&nbsp; Re (D4) = 294 Hz &nbsp;|&nbsp; Mi (E4) = 329 Hz &nbsp;|&nbsp; Fa (F4) = 349 Hz<br>
+    Sol (G4) = 392 Hz &nbsp;|&nbsp; La (A4) = 440 Hz &nbsp;|&nbsp; Si (B4) = 494 Hz &nbsp;|&nbsp; Do (C5) = 523 Hz<br><br>
+    An <strong style="color:#3355ff">8Ω speaker</strong> connected to pin 3 converts the square wave into audible sound.
+  </div>
+</div>
+
+<!-- COMPONENTS -->
+<div id="components" class="tab-content">
+  <div class="section-label">Required Components</div>
+  <div class="comp-grid">
+    <div class="comp-item"><span class="comp-dot"></span>555 Timer IC</div>
+    <div class="comp-item"><span class="comp-dot"></span>8Ω Speaker</div>
+    <div class="comp-item"><span class="comp-dot"></span>8× Push Buttons</div>
+    <div class="comp-item"><span class="comp-dot"></span>Resistors (varied values)</div>
+    <div class="comp-item"><span class="comp-dot"></span>10µF Capacitor</div>
+    <div class="comp-item"><span class="comp-dot"></span>0.01µF Capacitor</div>
+    <div class="comp-item"><span class="comp-dot"></span>9V Battery</div>
+    <div class="comp-item"><span class="comp-dot"></span>Breadboard</div>
+    <div class="comp-item"><span class="comp-dot"></span>Jumper Wires</div>
+    <div class="comp-item"><span class="comp-dot"></span>8-pin IC Base</div>
+  </div>
+</div>
+
+<!-- PROCEDURE -->
+<div id="procedure" class="tab-content">
+  <div class="section-label">Procedure</div>
+  <ol class="steps-list">
+    <li><span class="step-num">1</span>Place the 555 Timer IC on the breadboard using an 8-pin IC base.</li>
+    <li><span class="step-num">2</span>Connect Pin 1 (GND) to negative rail and Pin 8 (VCC) to positive rail of the 9V supply.</li>
+    <li><span class="step-num">3</span>Connect Pin 4 (Reset) to VCC and Pin 5 (Control) to GND via a 0.01µF capacitor.</li>
+    <li><span class="step-num">4</span>Connect Pin 2 (Trigger) and Pin 6 (Threshold) together.</li>
+    <li><span class="step-num">5</span>Connect a 10µF capacitor between Pin 2/6 and GND.</li>
+    <li><span class="step-num">6</span>Connect 8 different resistors in series with 8 push buttons between VCC and Pin 7 (Discharge).</li>
+    <li><span class="step-num">7</span>Connect an 8Ω speaker between Pin 3 (Output) and GND.</li>
+    <li><span class="step-num">8</span>Power the circuit with a 9V battery.</li>
+    <li><span class="step-num">9</span>Press each button one by one — each produces a different musical note.</li>
+    <li><span class="step-num">10</span>Verify notes match expected frequencies using a frequency counter or mobile app.</li>
+  </ol>
+</div>
+
+<!-- CIRCUIT -->
+<div id="circuit" class="tab-content">
+  <div class="section-label">Circuit Diagram</div>
+  <div style="padding:10px;">
+    <img src="./circuit2.png"
+         alt="Circuit Diagram"
+         style="width:70%; height:auto; border-radius:10px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+  </div>
+</div>
+
+<!-- SIMULATION -->
+<div id="simulation" class="tab-content">
+  <div class="section-label">Live Simulation — Breadboard Electronic Piano</div>
+
+  <div class="sim-top-bar">
+    <div>
+      <div style="font-size:12px;color:#8b949e;margin-bottom:4px;">Current Note</div>
+      <div class="note-display" id="note-display">&#9834; Press a button to play</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:#8b949e;margin-bottom:4px;">555 Timer Output (Pin 3)</div>
+      <div class="freq-pill" id="freq-pill">Freq: — Hz</div>
+      <div style="font-size:11px;color:#8b949e;margin-top:6px;" id="resistor-label">Resistor: —</div>
+    </div>
+  </div>
+
+  <div class="bb-scroll">
+    <svg id="bbSVG" viewBox="0 0 900 520" width="900" style="display:block;background:#1a1f2e;border-radius:10px;" xmlns="http://www.w3.org/2000/svg">
+
+      <rect x="10" y="10" width="880" height="500" rx="10" fill="#1e2535" stroke="#2d3650" stroke-width="2"/>
+      <text x="26" y="30" fill="#3355ff" font-size="10" font-family="Arial" font-weight="bold" letter-spacing="2">BREADBOARD — 555 TIMER ELECTRONIC PIANO</text>
+
+      <text x="16" y="60" fill="#ff4444" font-size="11" font-family="Arial" font-weight="bold">+</text>
+      <text x="16" y="78" fill="#4466ff" font-size="11" font-family="Arial" font-weight="bold">−</text>
+      <rect x="28" y="50" width="844" height="14" rx="3" fill="#1a0808" stroke="#3d1010" stroke-width="1"/>
+      <line x1="32" y1="57" x2="868" y2="57" stroke="#cc3333" stroke-width="2.5" stroke-dasharray="6,3"/>
+      <rect x="28" y="68" width="844" height="14" rx="3" fill="#08081a" stroke="#10103d" stroke-width="1"/>
+      <line x1="32" y1="75" x2="868" y2="75" stroke="#3355cc" stroke-width="2.5" stroke-dasharray="6,3"/>
+
+      <text x="16" y="445" fill="#ff4444" font-size="11" font-family="Arial" font-weight="bold">+</text>
+      <text x="16" y="463" fill="#4466ff" font-size="11" font-family="Arial" font-weight="bold">−</text>
+      <rect x="28" y="434" width="844" height="14" rx="3" fill="#1a0808" stroke="#3d1010" stroke-width="1"/>
+      <line x1="32" y1="441" x2="868" y2="441" stroke="#cc3333" stroke-width="2.5" stroke-dasharray="6,3"/>
+      <rect x="28" y="452" width="844" height="14" rx="3" fill="#08081a" stroke="#10103d" stroke-width="1"/>
+      <line x1="32" y1="459" x2="868" y2="459" stroke="#3355cc" stroke-width="2.5" stroke-dasharray="6,3"/>
+
+      <rect x="28" y="90" width="844" height="150" rx="4" fill="#252d3f" stroke="#2d3650" stroke-width="1"/>
+      <rect x="28" y="270" width="844" height="150" rx="4" fill="#252d3f" stroke="#2d3650" stroke-width="1"/>
+      <rect x="28" y="244" width="844" height="22" rx="3" fill="#1a1f2e" stroke="#2d3650" stroke-width="1"/>
+      <text x="440" y="258" text-anchor="middle" fill="#3d4a6a" font-size="9" font-family="Arial" letter-spacing="3">— — — CENTER DIVIDE — — —</text>
+
+      <text x="20" y="112" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">a</text>
+      <text x="20" y="142" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">b</text>
+      <text x="20" y="172" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">c</text>
+      <text x="20" y="202" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">d</text>
+      <text x="20" y="232" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">e</text>
+      <text x="20" y="292" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">f</text>
+      <text x="20" y="322" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">g</text>
+      <text x="20" y="352" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">h</text>
+      <text x="20" y="382" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">i</text>
+      <text x="20" y="412" fill="#3d4a6a" font-size="8" font-family="Arial" text-anchor="middle">j</text>
+
+      <!-- 9V BATTERY -->
+      <g transform="translate(840,90)">
+        <rect width="42" height="70" rx="5" fill="#2a2a12" stroke="#aaaa00" stroke-width="1.5"/>
+        <rect x="13" y="-5" width="16" height="7" rx="2" fill="#aaaa00"/>
+        <text x="21" y="18" fill="#dddd44" font-size="9" font-family="Arial" text-anchor="middle" font-weight="bold">9V</text>
+        <text x="21" y="30" fill="#888844" font-size="7" font-family="Arial" text-anchor="middle">BATT</text>
+        <text x="21" y="48" fill="#cc3333" font-size="13" font-family="Arial" text-anchor="middle" font-weight="bold">+</text>
+        <text x="21" y="64" fill="#3355cc" font-size="13" font-family="Arial" text-anchor="middle" font-weight="bold">−</text>
+      </g>
+      <polyline points="858,143 858,57" fill="none" stroke="#cc3333" stroke-width="2" stroke-linecap="round"/>
+      <polyline points="862,160 862,75" fill="none" stroke="#3355cc" stroke-width="2" stroke-linecap="round"/>
+
+      <!-- 555 TIMER IC -->
+      <g id="ic555group" transform="translate(150,185)">
+        <rect width="68" height="90" rx="4" fill="#12143a" stroke="#3355ff" stroke-width="2"/>
+        <path d="M22,0 Q34,-7 46,0" fill="none" stroke="#3355ff" stroke-width="1.5"/>
+        <text x="34" y="32" text-anchor="middle" fill="#5577ff" font-size="11" font-family="Arial" font-weight="bold">NE555</text>
+        <text x="34" y="46" text-anchor="middle" fill="#4466dd" font-size="8" font-family="Arial">TIMER</text>
+        <circle id="ic-led" cx="34" cy="62" r="6" fill="#1a1a2a" stroke="#3355ff" stroke-width="1.2"/>
+        <text x="34" y="80" text-anchor="middle" fill="#3d4a6a" font-size="7" font-family="Arial" id="ic-hz-txt">idle</text>
+        <line x1="-14" y1="10" x2="0" y2="10" stroke="#aabbcc" stroke-width="1.5"/>
+        <line x1="-14" y1="30" x2="0" y2="30" stroke="#aabbcc" stroke-width="1.5"/>
+        <line x1="-14" y1="50" x2="0" y2="50" stroke="#aabbcc" stroke-width="1.5"/>
+        <line x1="-14" y1="70" x2="0" y2="70" stroke="#aabbcc" stroke-width="1.5"/>
+        <circle cx="-14" cy="10" r="3.5" fill="#cc4444"/>
+        <circle cx="-14" cy="30" r="3.5" fill="#f0883e"/>
+        <circle cx="-14" cy="50" r="3.5" fill="#39d353"/>
+        <circle cx="-14" cy="70" r="3.5" fill="#cc44cc"/>
+        <text x="-18" y="8"  fill="#cc4444" font-size="6.5" font-family="Arial" text-anchor="end">1·GND</text>
+        <text x="-18" y="28" fill="#f0883e" font-size="6.5" font-family="Arial" text-anchor="end">2·TRG</text>
+        <text x="-18" y="48" fill="#39d353" font-size="6.5" font-family="Arial" text-anchor="end">3·OUT</text>
+        <text x="-18" y="68" fill="#cc44cc" font-size="6.5" font-family="Arial" text-anchor="end">4·RST</text>
+        <line x1="68" y1="10" x2="82" y2="10" stroke="#aabbcc" stroke-width="1.5"/>
+        <line x1="68" y1="30" x2="82" y2="30" stroke="#aabbcc" stroke-width="1.5"/>
+        <line x1="68" y1="50" x2="82" y2="50" stroke="#aabbcc" stroke-width="1.5"/>
+        <line x1="68" y1="70" x2="82" y2="70" stroke="#aabbcc" stroke-width="1.5"/>
+        <circle cx="82" cy="10" r="3.5" fill="#ee4444"/>
+        <circle cx="82" cy="30" r="3.5" fill="#44aaee"/>
+        <circle cx="82" cy="50" r="3.5" fill="#f0883e"/>
+        <circle cx="82" cy="70" r="3.5" fill="#4488ee"/>
+        <text x="86" y="8"  fill="#ee4444" font-size="6.5" font-family="Arial">8·VCC</text>
+        <text x="86" y="28" fill="#44aaee" font-size="6.5" font-family="Arial">7·DIS</text>
+        <text x="86" y="48" fill="#f0883e" font-size="6.5" font-family="Arial">6·THR</text>
+        <text x="86" y="68" fill="#4488ee" font-size="6.5" font-family="Arial">5·CTL</text>
+      </g>
+
+      <!-- IC WIRING -->
+      <polyline points="136,195 120,195 120,459" fill="none" stroke="#cc4444" stroke-width="1.8" stroke-linecap="round"/>
+      <polyline points="232,195 248,195 248,57" fill="none" stroke="#ee4444" stroke-width="1.8" stroke-linecap="round"/>
+      <polyline points="136,255 128,255 128,57" fill="none" stroke="#cc44cc" stroke-width="1.8" stroke-linecap="round"/>
+      <polyline points="136,215 112,215 112,295 232,295 232,275" fill="none" stroke="#f0883e" stroke-width="1.8" stroke-linecap="round"/>
+      <polyline points="136,235 60,235 60,355" fill="none" stroke="#39d353" stroke-width="2" stroke-linecap="round" id="spk-wire-out"/>
+
+      <!-- 10uF CAPACITOR -->
+      <g transform="translate(100,300)">
+        <rect width="26" height="40" rx="3" fill="#0a2a0a" stroke="#33aa33" stroke-width="1.5"/>
+        <text x="13" y="14" fill="#44cc44" font-size="7" font-family="Arial" text-anchor="middle" font-weight="bold">10µF</text>
+        <text x="13" y="25" fill="#33aa33" font-size="6" font-family="Arial" text-anchor="middle">ELEC</text>
+        <text x="3" y="38" fill="#cc8800" font-size="9" font-family="Arial">+</text>
+        <line x1="13" y1="0" x2="13" y2="-10" stroke="#f0883e" stroke-width="1.5"/>
+        <line x1="13" y1="40" x2="13" y2="50" stroke="#aaaaaa" stroke-width="1.5"/>
+      </g>
+      <polyline points="113,290 113,215" fill="none" stroke="#f0883e" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <polyline points="113,350 113,459" fill="none" stroke="#3355cc" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+      <!-- 0.01uF CAPACITOR -->
+      <g transform="translate(240,320)">
+        <rect width="26" height="36" rx="3" fill="#12121a" stroke="#445588" stroke-width="1.5"/>
+        <text x="13" y="12" fill="#6699bb" font-size="6.5" font-family="Arial" text-anchor="middle">0.01</text>
+        <text x="13" y="22" fill="#6699bb" font-size="6.5" font-family="Arial" text-anchor="middle">µF</text>
+        <line x1="13" y1="0" x2="13" y2="-8" stroke="#4488ee" stroke-width="1.5"/>
+        <line x1="13" y1="36" x2="13" y2="46" stroke="#aaaaaa" stroke-width="1.5"/>
+      </g>
+      <polyline points="232,255 253,255 253,312" fill="none" stroke="#4488ee" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <polyline points="253,366 253,459" fill="none" stroke="#3355cc" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+      <!-- SPEAKER -->
+      <g transform="translate(34,340)">
+        <ellipse cx="26" cy="26" rx="24" ry="24" fill="#1a0a00" stroke="#aa6600" stroke-width="2"/>
+        <ellipse cx="26" cy="26" rx="16" ry="16" fill="#220e00" stroke="#885500" stroke-width="1.5"/>
+        <ellipse cx="26" cy="26" rx="9"  ry="9"  fill="#110700" stroke="#664400" stroke-width="1"/>
+        <ellipse cx="26" cy="26" rx="3"  ry="3"  fill="#331100"/>
+        <path d="M26,10 Q32,26 26,42" fill="none" stroke="#55330066" stroke-width="1"/>
+        <path d="M10,26 Q26,32 42,26" fill="none" stroke="#55330066" stroke-width="1"/>
+        <text x="26" y="60" fill="#aa6600" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">8Ω SPK</text>
+        <line x1="14" y1="2"  x2="14" y2="-8"  stroke="#39d353" stroke-width="2"/>
+        <line x1="38" y1="2"  x2="38" y2="-8"  stroke="#3355cc" stroke-width="2"/>
+      </g>
+      <polyline points="72,340 72,459" fill="none" stroke="#3355cc" stroke-width="1.8" stroke-linecap="round"/>
+
+      <!-- BUTTON 1 - Do C4 261Hz -->
+      <g id="btn0" transform="translate(310,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">5.5kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R1</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn0-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn0-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">Do/C4</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">261Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[A]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn0-wire"/>
+      </g>
+
+      <!-- BUTTON 2 - Re D4 294Hz -->
+      <g id="btn1" transform="translate(380,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">4.9kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R2</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn1-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn1-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">Re/D4</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">294Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[S]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn1-wire"/>
+      </g>
+
+      <!-- BUTTON 3 - Mi E4 329Hz -->
+      <g id="btn2" transform="translate(450,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">4.4kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R3</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn2-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn2-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">Mi/E4</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">329Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[D]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn2-wire"/>
+      </g>
+
+      <!-- BUTTON 4 - Fa F4 349Hz -->
+      <g id="btn3" transform="translate(520,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">4.1kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R4</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn3-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn3-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">Fa/F4</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">349Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[F]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn3-wire"/>
+      </g>
+
+      <!-- BUTTON 5 - Sol G4 392Hz -->
+      <g id="btn4" transform="translate(590,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">3.7kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R5</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn4-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn4-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">Sol/G4</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">392Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[G]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn4-wire"/>
+      </g>
+
+      <!-- BUTTON 6 - La A4 440Hz -->
+      <g id="btn5" transform="translate(660,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">3.3kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R6</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn5-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn5-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">La/A4</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">440Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[H]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn5-wire"/>
+      </g>
+
+      <!-- BUTTON 7 - Si B4 494Hz -->
+      <g id="btn6" transform="translate(730,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">2.9kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R7</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn6-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn6-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">Si/B4</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">494Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[J]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn6-wire"/>
+      </g>
+
+      <!-- BUTTON 8 - Do2 C5 523Hz -->
+      <g id="btn7" transform="translate(800,130)" style="cursor:pointer">
+        <rect x="6" y="-38" width="20" height="30" rx="2" fill="#2a1a08" stroke="#aa8833" stroke-width="1.2"/>
+        <text x="16" y="-26" fill="#f0883e" font-size="5.5" font-family="Arial" text-anchor="middle">2.7kΩ</text>
+        <text x="16" y="-16" fill="#885522" font-size="5" font-family="Arial" text-anchor="middle">R8</text>
+        <line x1="16" y1="-68" x2="16" y2="-38" stroke="#cc3333" stroke-width="1.5"/>
+        <line x1="16" y1="-8" x2="16" y2="0" stroke="#aaaaaa" stroke-width="1.5"/>
+        <rect x="0" y="0" width="32" height="20" rx="3" fill="#181828" stroke="#4455aa" stroke-width="1.5" id="btn7-body"/>
+        <rect x="8" y="4" width="16" height="12" rx="2" fill="#0a0a20" stroke="#3344aa" stroke-width="1" id="btn7-cap"/>
+        <text x="16" y="30" fill="#8b949e" font-size="7" font-family="Arial" text-anchor="middle">Do₂/C5</text>
+        <text x="16" y="41" fill="#555577" font-size="7" font-family="Arial" text-anchor="middle">523Hz</text>
+        <text x="16" y="52" fill="#3355ff" font-size="8" font-family="Arial" text-anchor="middle" font-weight="bold">[K]</text>
+        <line x1="16" y1="20" x2="16" y2="65" stroke="#44aaee" stroke-width="1.5" stroke-dasharray="3,2" id="btn7-wire"/>
+      </g>
+
+      <polyline points="326,62 396,62 466,62 536,62 606,62 676,62 746,62 816,62"
+                fill="none" stroke="#cc3333" stroke-width="2" stroke-linecap="round" stroke-dasharray="4,2"/>
+      <polyline points="326,195 396,195 466,195 536,195 606,195 676,195 746,195 816,195"
+                fill="none" stroke="#44aaee" stroke-width="2" stroke-linecap="round" stroke-dasharray="4,2"/>
+      <polyline points="326,195 232,215" fill="none" stroke="#44aaee" stroke-width="1.8" stroke-linecap="round"/>
+
+      <rect id="active-btn-glow" x="0" y="0" width="32" height="20" rx="3"
+            fill="none" stroke="#39ff14" stroke-width="2.5" opacity="0" style="pointer-events:none"/>
+
+      <text x="440" y="488" fill="#3d4a6a" font-size="9" font-family="Arial" text-anchor="middle">
+        Click any push button above · or use keyboard keys A S D F G H J K
+      </text>
+    </svg>
+  </div>
+
+  <div class="wave-box">
+    <div class="wave-label">~ 555 Timer Square Wave Output — Pin 3</div>
+    <canvas id="wave-canvas" height="80" style="width:100%;display:block;"></canvas>
+  </div>
+
+  <div class="kb-hint">
+    Keyboard &nbsp;→&nbsp;
+    <kbd>A</kbd> Do &nbsp;
+    <kbd>S</kbd> Re &nbsp;
+    <kbd>D</kbd> Mi &nbsp;
+    <kbd>F</kbd> Fa &nbsp;
+    <kbd>G</kbd> Sol &nbsp;
+    <kbd>H</kbd> La &nbsp;
+    <kbd>J</kbd> Si &nbsp;
+    <kbd>K</kbd> Do₂
+  </div>
+</div>
+
+<!-- WIRING LAB -->
+<div id="wiringlab" class="tab-content">
+  <div class="section-label">Interactive Wiring Lab — 555 Timer Piano</div>
+  <div class="try-intro">
+    <strong>How to use:</strong> Click any <strong>pin dot</strong> to select it, then click another pin to draw a wire.
+    ✅ Correct = colored &nbsp;|&nbsp; ❌ Wrong = red dashed. Click <strong>Check Connections</strong> to validate all.
+  </div>
+
+  <div class="wiring-area-wrap" id="wiringArea">
+    <svg class="wires-svg" id="wiresSVG"></svg>
+
+    <div class="component" style="left:290px;top:200px;min-width:155px;">
+      <div class="comp-title-w">&#9679; 555 Timer IC</div>
+      <div class="pin" data-pin="ic-p1"><div class="dot" id="dot-ic-p1"></div>Pin 1 — GND</div>
+      <div class="pin" data-pin="ic-p2"><div class="dot" id="dot-ic-p2"></div>Pin 2 — Trigger</div>
+      <div class="pin" data-pin="ic-p3"><div class="dot" id="dot-ic-p3"></div>Pin 3 — Output</div>
+      <div class="pin" data-pin="ic-p4"><div class="dot" id="dot-ic-p4"></div>Pin 4 — Reset</div>
+      <div class="pin" data-pin="ic-p5"><div class="dot" id="dot-ic-p5"></div>Pin 5 — Control</div>
+      <div class="pin" data-pin="ic-p6"><div class="dot" id="dot-ic-p6"></div>Pin 6 — Threshold</div>
+      <div class="pin" data-pin="ic-p7"><div class="dot" id="dot-ic-p7"></div>Pin 7 — Discharge</div>
+      <div class="pin" data-pin="ic-p8"><div class="dot" id="dot-ic-p8"></div>Pin 8 — VCC</div>
+    </div>
+
+    <div class="component" style="left:20px;top:20px;min-width:140px;">
+      <div class="comp-title-w">&#9889; 9V Battery</div>
+      <div class="pin" data-pin="bat-vcc"><div class="dot" id="dot-bat-vcc"></div>VCC (+) Rail</div>
+      <div class="pin" data-pin="bat-gnd"><div class="dot" id="dot-bat-gnd"></div>GND (−) Rail</div>
+    </div>
+
+    <div class="component" style="left:20px;top:180px;min-width:145px;">
+      <div class="comp-title-w">&#9651; Cap 10µF</div>
+      <div class="pin" data-pin="cap10-pos"><div class="dot" id="dot-cap10-pos"></div>(+) → Pin 2/6</div>
+      <div class="pin" data-pin="cap10-neg"><div class="dot" id="dot-cap10-neg"></div>(−) → GND</div>
+    </div>
+
+    <div class="component" style="left:20px;top:330px;min-width:145px;">
+      <div class="comp-title-w">&#9651; Cap 0.01µF</div>
+      <div class="pin" data-pin="cap001-a"><div class="dot" id="dot-cap001-a"></div>A → Pin 5</div>
+      <div class="pin" data-pin="cap001-b"><div class="dot" id="dot-cap001-b"></div>B → GND</div>
+    </div>
+
+    <div class="component" style="left:290px;top:20px;min-width:140px;">
+      <div class="comp-title-w">&#128266; Speaker 8Ω</div>
+      <div class="pin" data-pin="spk-in"><div class="dot" id="dot-spk-in"></div>(+) → Pin 3</div>
+      <div class="pin" data-pin="spk-gnd"><div class="dot" id="dot-spk-gnd"></div>(−) → GND</div>
+    </div>
+
+    <div class="component" style="left:480px;top:180px;min-width:155px;">
+      <div class="comp-title-w">&#9711; Button + Resistor</div>
+      <div class="pin" data-pin="btn-vcc"><div class="dot" id="dot-btn-vcc"></div>One end → VCC</div>
+      <div class="pin" data-pin="btn-p7"><div class="dot" id="dot-btn-p7"></div>Other → Pin 7</div>
+    </div>
+
+    <div class="component" style="left:480px;top:360px;min-width:145px;">
+      <div class="comp-title-w">&#128279; Reset Wire</div>
+      <div class="pin" data-pin="rst-vcc"><div class="dot" id="dot-rst-vcc"></div>VCC → Pin 4</div>
+    </div>
+  </div>
+
+  <div class="validation-panel">
+    <h3>Connection Checker</h3>
+    <div id="check-list"></div>
+    <div class="lab-btn-row">
+      <button class="lab-btn primary" onclick="validateWiring()">&#10004; Check Connections</button>
+      <button class="lab-btn danger" onclick="clearWires()">&#10005; Clear All</button>
+    </div>
+  </div>
+</div>
+
+<!-- HARDWARE TAB -->
+<div id="hardware" class="tab-content">
+  <div class="section-label">Hardware Implementation</div>
+
+  <!-- VIDEO SECTION -->
+  <div class="hw-video-card">
+    <video controls poster="piano-pic.jpeg">
+      <source src="piano-video.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+    <div class="hw-video-body">
+      <div class="hw-video-title">
+        <span class="play-badge">▶ DEMO</span>
+        Project Working Demo
+      </div>
+      <div class="hw-video-desc">
+        Live demonstration of the Electronic Piano using 555 Timer IC — pressing each push button produces a different musical note through the 8Ω speaker. Each button is wired with a different resistor value to change the RC time constant and output frequency.
+      </div>
+      <span class="photo-tag">Live Demo</span>
+      <span class="photo-tag">555 Timer IC</span>
+      <span class="photo-tag">8Ω Speaker</span>
+      <span class="photo-tag">Astable Mode</span>
+    </div>
+  </div>
+
+  <!-- PHOTO GRID -->
+  <div class="hw-photo-grid">
+
+    <!-- LEFT: Main photo -->
+    <div class="hw-photo-card">
+      <img src="piano-pic.jpeg" alt="Electronic Piano Hardware"
+           onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+      <div style="display:none;padding:40px;text-align:center;color:#8b949e;font-size:13px;">
+        Place <strong style="color:#39d353">piano-pic.jpeg</strong> in the same folder
+      </div>
+      <div class="hw-photo-body">
+        <div class="hw-photo-title">Complete Hardware Setup</div>
+        <div class="hw-photo-desc">
+          555 Timer IC on a breadboard connected to 8 push buttons — each with a different resistor — and an 8Ω speaker at Pin 3 (Output). Powered by a 9V battery with capacitors at Pin 2/6 and Pin 5 as per astable mode configuration.
+        </div>
+        <span class="photo-tag">555 Timer IC</span>
+        <span class="photo-tag">8 Push Buttons</span>
+        <span class="photo-tag">Breadboard</span>
+        <span class="photo-tag">9V Battery</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: 3 info cards -->
+    <div class="hw-info-stack">
+
+      <div class="hw-photo-card">
+        <div class="hw-photo-body">
+          <div class="hw-photo-title">🎹 Push Button Keys</div>
+          <div class="hw-photo-desc">
+            8 tactile push buttons act as piano keys — Do to Do₂. Each button is connected in series with a different resistor (5.5kΩ down to 2.7kΩ) between VCC and Pin 7 (Discharge). Pressing a button changes the RC time constant, altering the output frequency at Pin 3.
+          </div>
+        </div>
+      </div>
+
+      <div class="hw-photo-card">
+        <div class="hw-photo-body">
+          <div class="hw-photo-title">🔊 Speaker Output</div>
+          <div class="hw-photo-desc">
+            An 8Ω speaker is connected between Pin 3 (Output) and GND. The 555 Timer generates a square wave at Pin 3 — frequency determined by the resistor of the pressed button. The speaker converts this into audible musical notes ranging from 261 Hz (Do/C4) to 523 Hz (Do₂/C5).
+          </div>
+        </div>
+      </div>
+
+      <div class="hw-photo-card">
+        <div class="hw-photo-body">
+          <div class="hw-photo-title">⚡ 555 IC Wiring</div>
+          <div class="hw-photo-desc">
+            Pin 1 = GND, Pin 8 = VCC (9V), Pin 4 (Reset) tied to VCC, Pin 5 (Control) bypassed via 0.01µF capacitor to GND. Pins 2 and 6 are shorted together with a 10µF capacitor to GND — this forms the astable oscillator that produces the continuous square wave output.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>&copy; 2025 Virtual Lab &mdash; by <span>Arnav Nadge</span></footer>
+
+<script>
+/* ── TABS ─────────────────────────────────────────────── */
+function showTab(id, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── NOTES DATA ───────────────────────────────────────── */
+const NOTES = [
+  { note:'Do (C4)',  freq:261, key:'a', res:'5.5kΩ', idx:0 },
+  { note:'Re (D4)',  freq:294, key:'s', res:'4.9kΩ', idx:1 },
+  { note:'Mi (E4)',  freq:329, key:'d', res:'4.4kΩ', idx:2 },
+  { note:'Fa (F4)',  freq:349, key:'f', res:'4.1kΩ', idx:3 },
+  { note:'Sol (G4)', freq:392, key:'g', res:'3.7kΩ', idx:4 },
+  { note:'La (A4)',  freq:440, key:'h', res:'3.3kΩ', idx:5 },
+  { note:'Si (B4)',  freq:494, key:'j', res:'2.9kΩ', idx:6 },
+  { note:'Do₂ (C5)',freq:523, key:'k', res:'2.7kΩ', idx:7 },
+];
+const BTN_SVG_X = [310,380,450,520,590,660,730,800];
+
+let audioCtx = null, activeOsc = {}, waveAnim = null, currentFreq = 0;
+
+function getCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playNote(n) {
+  const ctx = getCtx(); const id = 'n' + n.idx;
+  if (activeOsc[id]) return;
+  const osc = ctx.createOscillator(); const gain = ctx.createGain();
+  osc.type = 'square'; osc.frequency.setValueAtTime(n.freq, ctx.currentTime);
+  gain.gain.setValueAtTime(0.1, ctx.currentTime);
+  osc.connect(gain); gain.connect(ctx.destination); osc.start();
+  activeOsc[id] = { osc, gain }; currentFreq = n.freq;
+  updateUI(n, true); drawWave(n.freq);
+}
+function stopNote(n) {
+  const id = 'n' + n.idx;
+  if (activeOsc[id]) {
+    const { osc, gain } = activeOsc[id];
+    gain.gain.setTargetAtTime(0, getCtx().currentTime, 0.05);
+    setTimeout(() => { try { osc.stop(); } catch(e){} }, 200);
+    delete activeOsc[id]; currentFreq = 0;
+    if (Object.keys(activeOsc).length === 0) updateUI(null, false);
+  }
+}
+function updateUI(n, active) {
+  const nd=document.getElementById('note-display'), fp=document.getElementById('freq-pill'),
+        rl=document.getElementById('resistor-label'), led=document.getElementById('ic-led'),
+        ht=document.getElementById('ic-hz-txt'), glow=document.getElementById('active-btn-glow');
+  if (active && n) {
+    nd.textContent='♪ '+n.note+'  —  '+n.freq+' Hz'; fp.textContent='Freq: '+n.freq+' Hz';
+    rl.textContent='Resistor: '+n.res+' (R'+(n.idx+1)+')';
+    led.setAttribute('fill','#39ff14'); led.setAttribute('stroke','#39d353');
+    ht.textContent=n.freq+' Hz'; ht.setAttribute('fill','#39d353');
+    glow.setAttribute('x',BTN_SVG_X[n.idx]); glow.setAttribute('y',130); glow.setAttribute('opacity','1');
+    NOTES.forEach((nn,i)=>{
+      const cap=document.getElementById('btn'+i+'-cap'), body=document.getElementById('btn'+i+'-body');
+      if(cap)  cap.setAttribute('fill',  i===n.idx?'#1a2a5a':'#0a0a20');
+      if(body) body.setAttribute('stroke',i===n.idx?'#39ff14':'#4455aa');
+    });
+  } else {
+    nd.textContent='♩ Press a button to play'; fp.textContent='Freq: — Hz'; rl.textContent='Resistor: —';
+    led.setAttribute('fill','#1a1a2a'); led.setAttribute('stroke','#3355ff');
+    ht.textContent='idle'; ht.setAttribute('fill','#3d4a6a'); glow.setAttribute('opacity','0');
+    NOTES.forEach((nn,i)=>{
+      const cap=document.getElementById('btn'+i+'-cap'), body=document.getElementById('btn'+i+'-body');
+      if(cap)  cap.setAttribute('fill','#0a0a20');
+      if(body) body.setAttribute('stroke','#4455aa');
+    });
+  }
+}
+
+NOTES.forEach((n) => {
+  const g = document.getElementById('btn' + n.idx);
+  if (!g) return;
+  g.addEventListener('mousedown',  () => playNote(n));
+  g.addEventListener('mouseup',    () => stopNote(n));
+  g.addEventListener('mouseleave', () => stopNote(n));
+  g.addEventListener('touchstart', e => { e.preventDefault(); playNote(n); });
+  g.addEventListener('touchend',   e => { e.preventDefault(); stopNote(n); });
+});
+
+const keyMap = {};
+NOTES.forEach(n => { keyMap[n.key] = n; });
+document.addEventListener('keydown', e => { const k=e.key.toLowerCase(); if(keyMap[k]&&!e.repeat) playNote(keyMap[k]); });
+document.addEventListener('keyup',   e => { const k=e.key.toLowerCase(); if(keyMap[k]) stopNote(keyMap[k]); });
+
+/* ── WAVEFORM ─────────────────────────────────────────── */
+const canvas = document.getElementById('wave-canvas');
+const ctx2 = canvas.getContext('2d');
+let wavePhase = 0;
+
+function drawWave(freq) {
+  if (waveAnim) cancelAnimationFrame(waveAnim);
+  function frame() {
+    canvas.width = canvas.offsetWidth || 600; canvas.height = 80;
+    const w=canvas.width, h=canvas.height;
+    ctx2.fillStyle='#161b22'; ctx2.fillRect(0,0,w,h);
+    ctx2.strokeStyle='#21262d'; ctx2.lineWidth=1;
+    ctx2.beginPath(); ctx2.moveTo(0,h/2); ctx2.lineTo(w,h/2); ctx2.stroke();
+    ctx2.strokeStyle='#39d353'; ctx2.lineWidth=2; ctx2.beginPath();
+    const period=w/5;
+    for(let x=0;x<=w;x++){
+      const t=((x/period)+wavePhase)%1, y=t<0.5?h*0.15:h*0.85;
+      if(x===0){ctx2.moveTo(x,y);continue;}
+      const prevT=(((x-1)/period)+wavePhase)%1;
+      if((prevT<0.5)!==(t<0.5)) ctx2.lineTo(x,prevT<0.5?h*0.85:h*0.15);
+      ctx2.lineTo(x,y);
+    }
+    ctx2.stroke();
+    ctx2.fillStyle='#3355ff'; ctx2.font='11px Arial';
+    ctx2.fillText(freq+' Hz  |  Square Wave (Pin 3)',8,16);
+    wavePhase+=freq/6000;
+    if(currentFreq>0) waveAnim=requestAnimationFrame(frame);
+    else {
+      canvas.width=canvas.offsetWidth||600;
+      ctx2.fillStyle='#161b22'; ctx2.fillRect(0,0,canvas.width,80);
+      ctx2.strokeStyle='#21262d'; ctx2.lineWidth=1;
+      ctx2.beginPath(); ctx2.moveTo(0,40); ctx2.lineTo(canvas.width,40); ctx2.stroke();
+      ctx2.fillStyle='#8b949e'; ctx2.font='11px Arial';
+      ctx2.fillText('Press a button to see waveform',8,16);
+    }
+  }
+  frame();
+}
+(function initWave(){
+  canvas.width=canvas.offsetWidth||600; canvas.height=80;
+  ctx2.fillStyle='#161b22'; ctx2.fillRect(0,0,canvas.width,80);
+  ctx2.strokeStyle='#21262d'; ctx2.lineWidth=1;
+  ctx2.beginPath(); ctx2.moveTo(0,40); ctx2.lineTo(canvas.width,40); ctx2.stroke();
+  ctx2.fillStyle='#8b949e'; ctx2.font='11px Arial';
+  ctx2.fillText('Press a button to see waveform',8,16);
+})();
+
+/* ── WIRING LAB ──────────────────────────────────────── */
+const CORRECT_PAIRS=[
+  ['bat-gnd','ic-p1'],['cap10-pos','ic-p2'],['cap10-neg','bat-gnd'],
+  ['spk-in','ic-p3'],['spk-gnd','bat-gnd'],['bat-vcc','ic-p4'],
+  ['cap001-a','ic-p5'],['cap001-b','bat-gnd'],['ic-p2','ic-p6'],
+  ['btn-p7','ic-p7'],['btn-vcc','bat-vcc'],['bat-vcc','ic-p8'],['rst-vcc','ic-p4'],
+];
+const CHECK_LABELS={
+  'bat-gnd|ic-p1':'GND Rail → Pin 1 (GND)',
+  'cap10-pos|ic-p2':'10µF Cap (+) → Pin 2 (Trigger)',
+  'cap10-neg|bat-gnd':'10µF Cap (−) → GND Rail',
+  'spk-in|ic-p3':'Speaker (+) → Pin 3 (Output)',
+  'spk-gnd|bat-gnd':'Speaker (−) → GND Rail',
+  'bat-vcc|ic-p4':'VCC → Pin 4 (Reset)',
+  'cap001-a|ic-p5':'0.01µF Cap → Pin 5 (Control)',
+  'cap001-b|bat-gnd':'0.01µF Cap → GND Rail',
+  'ic-p2|ic-p6':'Pin 2 (Trigger) → Pin 6 (Threshold)',
+  'btn-p7|ic-p7':'Button → Pin 7 (Discharge)',
+  'btn-vcc|bat-vcc':'Button → VCC Rail',
+  'bat-vcc|ic-p8':'VCC Rail → Pin 8 (VCC)',
+};
+const COLORS=['#3355ff','#39d353','#f0883e','#c084fc','#22d3ee','#f59e0b','#f43f5e','#84cc16','#f472b6','#67e8f9','#86efac','#fbbf24','#a78bfa'];
+let wires=[], selPin=null, colorIdx=0;
+
+(function buildChecklist(){
+  const cl=document.getElementById('check-list');
+  Object.entries(CHECK_LABELS).forEach(([key,label])=>{
+    const id=key.replace(/\|/g,'-');
+    cl.innerHTML+=`<div class="check-row"><span class="check-icon" id="ci-${id}">⬜</span><span class="check-label">${label}</span><span class="check-status c-pending" id="cs-${id}">Not connected</span></div>`;
+  });
+})();
+
+document.querySelectorAll('.pin').forEach(pin=>{
+  pin.querySelector('.dot').addEventListener('click',e=>{
+    e.stopPropagation();
+    const pid=pin.dataset.pin;
+    if(!selPin){ selPin=pid; document.getElementById('dot-'+pid).classList.add('selected'); }
+    else {
+      if(selPin===pid){ document.getElementById('dot-'+pid).classList.remove('selected'); selPin=null; return; }
+      wires=wires.filter(w=>!((w.f===selPin&&w.t===pid)||(w.f===pid&&w.t===selPin)));
+      wires.push({f:selPin,t:pid,c:COLORS[colorIdx++%COLORS.length]});
+      document.getElementById('dot-'+selPin).classList.remove('selected');
+      selPin=null; updateDots(); renderWires();
+    }
+  });
+});
+
+function isCorrect(f,t){ return CORRECT_PAIRS.some(([a,b])=>(a===f&&b===t)||(a===t&&b===f)); }
+function getDotXY(pid){
+  const dot=document.getElementById('dot-'+pid), area=document.getElementById('wiringArea');
+  if(!dot||!area) return {x:0,y:0};
+  const dr=dot.getBoundingClientRect(), ar=area.getBoundingClientRect();
+  return {x:dr.left-ar.left+dr.width/2, y:dr.top-ar.top+dr.height/2};
+}
+function renderWires(){
+  const svg=document.getElementById('wiresSVG'); svg.innerHTML='';
+  wires.forEach(w=>{
+    const a=getDotXY(w.f), b=getDotXY(w.t), ok=isCorrect(w.f,w.t);
+    const cx=(a.x+b.x)/2, cy=Math.min(a.y,b.y)-35;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',`M${a.x},${a.y} Q${cx},${cy} ${b.x},${b.y}`);
+    p.setAttribute('class','wire-path'); p.setAttribute('stroke',ok?w.c:'#f85149');
+    if(!ok) p.setAttribute('stroke-dasharray','5,4');
+    svg.appendChild(p);
+  });
+}
+function updateDots(){
+  document.querySelectorAll('.dot').forEach(d=>d.classList.remove('connected-ok','connected-err'));
+  wires.forEach(w=>{
+    const ok=isCorrect(w.f,w.t), cls=ok?'connected-ok':'connected-err';
+    const da=document.getElementById('dot-'+w.f), db=document.getElementById('dot-'+w.t);
+    if(da) da.classList.add(cls); if(db) db.classList.add(cls);
+  });
+}
+function validateWiring(){
+  Object.keys(CHECK_LABELS).forEach(key=>{
+    const [f,t]=key.split('|'), id=key.replace(/\|/g,'-');
+    const connected=wires.some(w=>(w.f===f&&w.t===t)||(w.f===t&&w.t===f));
+    document.getElementById('ci-'+id).textContent=connected?'✅':'❌';
+    const cs=document.getElementById('cs-'+id);
+    cs.className='check-status '+(connected?'c-ok':'c-err');
+    cs.textContent=connected?'Connected ✓':'Missing ✗';
+  });
+  renderWires();
+}
+function clearWires(){
+  wires=[]; colorIdx=0; document.getElementById('wiresSVG').innerHTML='';
+  document.querySelectorAll('.dot').forEach(d=>d.classList.remove('connected-ok','connected-err','selected'));
+  selPin=null;
+  Object.keys(CHECK_LABELS).forEach(key=>{
+    const id=key.replace(/\|/g,'-');
+    document.getElementById('ci-'+id).textContent='⬜';
+    const cs=document.getElementById('cs-'+id);
+    cs.className='check-status c-pending'; cs.textContent='Not connected';
+  });
+}
+window.addEventListener('resize', renderWires);
+</script>
+</body>
+</html>
